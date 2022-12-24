@@ -1,0 +1,30 @@
+{
+  "name": "moviedb",
+  "version": "1.0.0",
+  "description": "codi movie database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1", 
+    "dev": "nodemon index.js"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malak-wahyb1/Movie-DB.git"
+  },
+  "keywords": [
+    "movie"
+  ],
+  "author": "malak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/malak-wahyb1/Movie-DB/issues"
+  },
+  "homepage": "https://github.com/malak-wahyb1/Movie-DB#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+  
+}

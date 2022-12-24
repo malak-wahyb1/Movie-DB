@@ -25,7 +25,23 @@ app.get('/test', (req, res) =>{
     res.status(200)
     res.send({status:200,message:'ok'});
 })
+// url/time
 app.get('/time', (req, res) =>{
     res.type('text/plain');
     res.send({status:200,message:`${hour}:${min}:${sec}`})
 });
+//url hello id
+app.get(["/hello","/hello/:id"],(req,res)=>{
+    res.send({status:200, message:`Hello, ${req.params.id || "Unknwon"}`})
+})
+//search
+
+app.get("/search",(req,res)=>{
+    console.log(req.query.s)
+    if(typeof req.query.s =="undefined" || req.query.s === "") 
+    {res.send({status:500, error:true, message:"you have to provide a search"})
+    }else {
+        res.send( {status:200, message:"ok", data:req.query.s})
+    }
+})
+

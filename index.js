@@ -44,4 +44,27 @@ app.get("/search",(req,res)=>{
         res.send( {status:200, message:"ok", data:req.query.s})
     }
 })
+//create array
+const movies = [
+    { title: 'Jaws', year: 1975, rating: 8 },
+    { title: 'Avatar', year: 2009, rating: 7.8 },
+    { title: 'Brazil', year: 1985, rating: 8 },
+    { title: 'الإرهاب والكباب', year: 1992, rating: 6.2 }
+]
+// add route
+app.get("/movies/create",(req,res)=>{
+    res.send({status:200, message:"create a movie"})
+})
+// get route
+app.get("/movies/read",(req,res)=>{
+    res.send({status:200, data:movies})
+})
+//edit route
+app.get("/movies/update",(req,res)=>{
+    res.send({status:200, message:"update movies"})
+})
+//delete route
+app.get("/movies/delete",(req,res)=>{
+    res.send({status:200, message:"delete movies"})
+})
 

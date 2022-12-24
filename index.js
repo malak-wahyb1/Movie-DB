@@ -83,3 +83,14 @@ app.get("/movies/read/by-title", (req, res) => {
         {status:200,data:movies.sort((a,b)=>(a.title).localeCompare(b.title))})
    
 });
+//read by id
+app.get(["/movies/read/id/","/movies/read/id/:ID"], (req, res) => {
+  
+    if(req.params.ID>0 && req.params.ID <=movies.length){
+       res.send({status:200,data:movies[req.params.ID-1]})
+       
+    }else{
+         res.status(404);
+        res.send({status:404, error:true, message:`the movie ${req.params.ID} does not exist you have to provide`})
+    }
+})

@@ -67,4 +67,19 @@ app.get("/movies/update",(req,res)=>{
 app.get("/movies/delete",(req,res)=>{
     res.send({status:200, message:"delete movies"})
 })
-
+//get by date
+app.get("/movies/read/by-date",(req,res)=>{
+    res.send({status:200, data:movies.sort((a,b)=>
+        a.year - b.year)}
+        )}
+    )
+// get by rating
+app.get("/movies/read/by-rating",(req,res)=>{
+    res.send({status:200, data:movies.sort((a,b)=>b.rating-a.rating)})
+})
+//get by title
+app.get("/movies/read/by-title", (req, res) => {
+    res.send(
+        {status:200,data:movies.sort((a,b)=>(a.title).localeCompare(b.title))})
+   
+});

@@ -60,10 +60,10 @@ const movies = [
 app.get("/movies/update",(req,res)=>{
     res.send({status:200, message:"update movies"})
 })
-//delete route
-app.get("/movies/delete",(req,res)=>{
-    res.send({status:200, message:"delete movies"})
-})
+// //delete route
+// app.get("/movies/delete",(req,res)=>{
+//     res.send({status:200, message:"delete movies"})
+// })
 //get by date
 app.get("/movies/read/by-date",(req,res)=>{
     res.send({status:200, data:movies.sort((a,b)=>
@@ -102,3 +102,13 @@ app.get("/movies/add",(req,res)=>{
     }
 }
 )
+//delete
+app.get("/movies/delete/:id",(req,res)=>{
+   if(req.params.id>0&& req.params.id<=movies.length){
+    movies.splice(req.params.id-1, 1)
+    res.send({status:200, movies})
+ 
+   }else{
+    res.send({status:200,message:`the movie ${req.params.id} does not exist`})
+   }
+})

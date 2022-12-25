@@ -51,14 +51,11 @@ const movies = [
     { title: 'Brazil', year: 1985, rating: 8 },
     { title: 'الإرهاب والكباب', year: 1992, rating: 6.2 }
 ]
-// add route
-app.get("/movies/create",(req,res)=>{
-    res.send({status:200, message:"create a movie"})
-})
-// get route
-app.get("/movies/read",(req,res)=>{
-    res.send({status:200, data:movies})
-})
+// // add route
+// app.get("/movies/create",(req,res)=>{
+//     res.send({status:200, message:"create a movie"})
+// })
+
 //edit route
 app.get("/movies/update",(req,res)=>{
     res.send({status:200, message:"update movies"})
@@ -83,7 +80,7 @@ app.get("/movies/read/by-title", (req, res) => {
         {status:200,data:movies.sort((a,b)=>(a.title).localeCompare(b.title))})
    
 });
-//read by id
+//get by id
 app.get(["/movies/read/id/","/movies/read/id/:ID"], (req, res) => {
   
     if(req.params.ID>0 && req.params.ID <=movies.length){
@@ -94,3 +91,14 @@ app.get(["/movies/read/id/","/movies/read/id/:ID"], (req, res) => {
         res.send({status:404, error:true, message:`the movie ${req.params.ID} does not exist you have to provide`})
     }
 })
+// add movies
+app.get("/movies/add",(req,res)=>{
+    if(req.query.title && req.query.year && (/^[1-9]\d{3}$/).test(req.query.year)){
+        movies.push({title:req.query.title,year:req.query.year, rating:(req.query.rating && Number(req.query.rating)<=10&&Number(req.query.rating)>0)?Number(req.query.rating):4})
+        res.send({status:200, movies})
+    }else{
+        res.status(403)
+     res.send({status:403, error:true, message:"you cannot create a movie without providing a title and a year"})
+    }
+}
+)

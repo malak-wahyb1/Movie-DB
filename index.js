@@ -92,7 +92,7 @@ app.get(["/movies/read/id/","/movies/read/id/:ID"], (req, res) => {
     }
 })
 // add movies
-app.get("/movies/add",(req,res)=>{
+app.post("/movies/add",(req,res)=>{
     if(req.query.title && req.query.year && (/^[1-9]\d{3}$/).test(req.query.year)){
         movies.push({title:req.query.title,year:req.query.year, rating:(req.query.rating && Number(req.query.rating)<=10&&Number(req.query.rating)>0)?Number(req.query.rating):4})
         res.send({status:200, movies})
@@ -103,7 +103,7 @@ app.get("/movies/add",(req,res)=>{
 }
 )
 //delete
-app.get("/movies/delete/:id",(req,res)=>{
+app.delete("/movies/delete/:id",(req,res)=>{
    if(req.params.id>0&& req.params.id<=movies.length){
     movies.splice(req.params.id-1, 1)
     res.send({status:200, movies})
@@ -113,7 +113,7 @@ app.get("/movies/delete/:id",(req,res)=>{
    }
 })
 //update
-app.get("/movies/update/:id", (req, res) => {
+app.put("/movies/update/:id", (req, res) => {
     let id = Number(req.params.id) 
     if(id>=0 && id<movies.length){
         if(req.query.title){

@@ -1,10 +1,11 @@
 const express = require('express');
 const app = express();
 const mongoose=require('mongoose')
-const bodyParser = require('body-parser');
+// const bodyParser = require('body-parser');
 const autoIncrement = require('mongoose-auto-increment')
 mongoose.set('strictQuery', false);
-app.use(bodyParser.json());
+app.use(express.json())
+
 
 const port = process.env.PORT || 3000;
 //conection
@@ -18,7 +19,11 @@ db.once("open", function () {
 autoIncrement.initialize(mongoose.connection)
 //schema
 const schemaMovies = new mongoose.Schema({
-   
+    // _id: {
+    //     type: Number,
+    //     autoIncrement: true,
+    //     startAt: 100
+    //   },
     title: {
         type: String,
         required: true
@@ -37,52 +42,78 @@ const schemaMovies = new mongoose.Schema({
 
 const movies = mongoose.model('movies', schemaMovies);
 schemaMovies.plugin(autoIncrement.plugin, "movies");
-
-
-
-var date= new Date()
-var hour=date.getHours()
-var min=date.getMinutes()
-var sec=date.getSeconds()
-app.get('/', (req, res) =>{
-    res.type('text/plain');
-    res.send('ok');
-})
-app.get('/about', (req, res) =>{
-    res.type('text/plain');
-    res.send('Hello World about!');
-});
-// app.use((req, res) =>{
-//     res.type('text/plain');
-//     res.status(404);
-//     res.send('Not Found');
-// })
 app.listen(port, () =>{console.log(`listening on port ${port} clt c to get out`);});
-//url /test
-app.get('/test', (req, res) =>{
-    res.type('text/plain');
-    res.status(200)
-    res.send({status:200,message:'ok'});
-})
-// url/time
-app.get('/time', (req, res) =>{
-    res.type('text/plain');
-    res.send({status:200,message:`${hour}:${min}:${sec}`})
-});
-//url hello id
-app.get(["/hello","/hello/:id"],(req,res)=>{
-    res.send({status:200, message:`Hello, ${req.params.id || "Unknwon"}`})
-})
-//search
 
-app.get("/search",(req,res)=>{
-    console.log(req.query.s)
-    if(typeof req.query.s =="undefined" || req.query.s === "") 
-    {res.send({status:500, error:true, message:"you have to provide a search"})
-    }else {
-        res.send( {status:200, message:"ok", data:req.query.s})
+//user array
+const userSchema=mongoose.Schema({
+    userName:{
+        type:String,
+        required:true
+    },
+    password:{
+        type:String,
+        required:true
     }
 })
+const user=mongoose.model('user',userSchema);
+//add
+app.post('/user/add',async(req,res)=>{
+const NewUser=new user({
+    userName:req.body.userName,
+    password:req.body.password
+});
+try{
+    const SaveUser=await NewUser.save();
+    res.send(new User)
+}catch(err){
+    res.send(err)
+}
+})
+//delete
+app.delete('user/delete/:id',async(req,res)=>{
+    try{
+        const deleteUser=await user.deleteOne({_id:req.params.id})
+        res.send(deleteUser)
+    }catch(err){
+        res.send(err)
+    }
+})
+//update
+app.put('user/update/:id',(req,res)=>{
+    const id = req.params.id;
+    const update = req.body;
+  
+    user.findByIdAndUpdate(id, update, function(error, doc) {
+      if (error) {
+        res.status(500).send(error);
+      } else {
+        res.send(doc);
+      }
+    });
+  
+})
+//read
+app.get('/user/read/:id',async(req,res)=>{
+    try{
+        const readUser=await user.findById(req.params.id)
+        res.send(readUser)
+    }catch(err){res.send(err)}})
+//check function
+function check(usernames,password){
+    let acceptPassword=false
+    let acceptName=false
+    for(let i=0;i<user.length;i++){
+    if(usernames==user[i].userName){
+        if(password==user[i].password){
+            acceptName=true
+            acceptPassword=true
+        }
+
+    }
+    return 1;
+}
+}
+
 
 
 
@@ -134,31 +165,39 @@ app.get("/movies/read/:id",async (req, res) => {
        }
 })
 // add movies
-app.post("/movies/add",async(req,res)=>{
+app.post("/movies/add",(req,res)=>{
+    let username = req.body.username
+    let password=req.body.password
+    let checkUser=check(username,password)
+    if(checkUser=1){
+        console.log("Checking")
   try{
     movies.create({
-    _id:4,//every time change the id when you want to add a new movie.
+    _id:1,//every time change the id when you want to add a new movie.
     title: req.body.title,
     year: req.body.year,
     rating: req.body.rating,
 })}catch(err){
     console.log(err)
-}
+}}else{console.log("only users can add movies")}
 })
 
 //delete
 app.delete("/movies/delete/:id",(req,res)=>{
+    let checkUser=check(req.query.userName,req.query.password)
+    if(checkUser=1){
     movies.findByIdAndDelete(req.params.id).then(deletedMovie => {
         movies.find().then(movies => {
             res.send({ status: 200, data: movies });
         })
     }).catch(err => {
         res.status(404).send({ status: 404, error: true, message: `the movie '${req.params.id}' does not exist` });
-    })
+    })}else{console.log("only users can delete movies")}
 })
 //update
 app.put("/movies/update/:id", async (req, res) =>{
-   
+    let checkUser=check(req.query.userName,req.query.password)
+    if(checkUser=1){
     try {
         const movie = await movies.updateOne(
           { _id: req.params.id },
@@ -168,7 +207,7 @@ app.put("/movies/update/:id", async (req, res) =>{
         res.send(movie);
       } catch (err) {
         res.status(500).send(err);
-      }
+      }}else{console.log("only users can update movie")}
     });
       
     

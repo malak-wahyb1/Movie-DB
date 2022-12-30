@@ -7,10 +7,22 @@ mongoose.set('strictQuery', false);
 app.use(express.json())
 
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 //conection
 const uri="mongodb+srv://malak:malakwahyb12@cluster0.7zfe3os.mongodb.net/?retryWrites=true&w=majority"
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose
+    .connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+    .then(() => {
+      console.log("Successfully connected to database");
+    })
+    .catch((error) => {
+      console.log("database connection failed. exiting now...");
+      console.error(error);
+      process.exit(1);
+    });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error: "));
 db.once("open", function () {
@@ -30,7 +42,8 @@ const schemaMovies = new mongoose.Schema({
     },
     year: {
         type: Number,
-        default: 1900
+        default: 1900,
+        match: /^\d{4}$/
 
     },
     rating: {
@@ -42,6 +55,9 @@ const schemaMovies = new mongoose.Schema({
 
 const movies = mongoose.model('movies', schemaMovies);
 schemaMovies.plugin(autoIncrement.plugin, "movies");
+async function getModelLength() {
+    return await movies.countDocuments();
+  }
 app.listen(port, () =>{console.log(`listening on port ${port} clt c to get out`);});
 
 //user array
@@ -99,20 +115,20 @@ app.get('/user/read/:id',async(req,res)=>{
         res.send(readUser)
     }catch(err){res.send(err)}})
 //check function
-function check(usernames,password){
-    let acceptPassword=false
-    let acceptName=false
-    for(let i=0;i<user.length;i++){
-    if(usernames==user[i].userName){
-        if(password==user[i].password){
-            acceptName=true
-            acceptPassword=true
-        }
+// function check(usernames,password){
+//     let acceptPassword=false
+//     let acceptName=false
+//     for(let i=0;i<user.length;i++){
+//     if(usernames==user[i].userName){
+//         if(password==user[i].password){
+//             acceptName=true
+//             acceptPassword=true
+//         }
 
-    }
-    return 1;
-}
-}
+//     }
+//     return 1;
+// }
+// }
 
 
 
@@ -165,54 +181,75 @@ app.get("/movies/read/:id",async (req, res) => {
        }
 })
 // add movies
-app.post("/movies/add",(req,res)=>{
-    let username = req.body.username
-    let password=req.body.password
-    let checkUser=check(username,password)
-    if(checkUser=1){
-        console.log("Checking")
+app.post("/movies/add",async(req,res)=>{
+    id= await getModelLength();
   try{
     movies.create({
-    _id:1,//every time change the id when you want to add a new movie.
+    _id:id+1,
     title: req.body.title,
     year: req.body.year,
     rating: req.body.rating,
+    
 })}catch(err){
     console.log(err)
-}}else{console.log("only users can add movies")}
+}
 })
 
 //delete
 app.delete("/movies/delete/:id",(req,res)=>{
-    let checkUser=check(req.query.userName,req.query.password)
-    if(checkUser=1){
+    
     movies.findByIdAndDelete(req.params.id).then(deletedMovie => {
         movies.find().then(movies => {
             res.send({ status: 200, data: movies });
         })
     }).catch(err => {
         res.status(404).send({ status: 404, error: true, message: `the movie '${req.params.id}' does not exist` });
-    })}else{console.log("only users can delete movies")}
+    })
 })
 //update
 app.put("/movies/update/:id", async (req, res) =>{
-    let checkUser=check(req.query.userName,req.query.password)
-    if(checkUser=1){
-    try {
-        const movie = await movies.updateOne(
-          { _id: req.params.id },
-          { $set: { title: req.body.title ,year:req.body.year,rating:req.body.rating} }
-        );
-    
-        res.send(movie);
-      } catch (err) {
-        res.status(500).send(err);
-      }}else{console.log("only users can update movie")}
+    title = req.body.title
+    year = req.body.year
+    rating = req.body.rating
+    if(title && !rating) {
+        try {
+          const movie = await movies.updateOne(
+            { _id: req.params.id },
+            { $set: { title: title } }
+          );
+     
+          res.send(movie);
+        } catch (err) {
+          res.status(500).send(err);
+        }}
+        if(!title && rating){
+          try {
+            const movie = await movies.updateOne(
+              { _id: req.params.id },
+              { $set: { rating: rating } }
+            );
+            
+            res.send(movie);
+          } catch (err) {
+            res.status(500).send(err);
+          }}
+          if(title && rating){
+            try {
+              const movie = await movies.updateMany(
+                { _id: req.params.id },
+                { $set: { rating: rating } },
+                { $set: { title: title } }
+              );
+             
+              res.send(movie);
+            } catch (err) {
+              res.status(500).json(err);
+            }}
+            
+      
+      
     });
       
     
     
-// function getValueForNextSequence(sequenceOfName){
 
-//     return se + 1;
-// }

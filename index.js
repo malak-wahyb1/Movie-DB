@@ -1,6 +1,45 @@
 const express = require('express');
 const app = express();
+const mongoose=require('mongoose')
+const bodyParser = require('body-parser');
+const autoIncrement = require('mongoose-auto-increment')
+mongoose.set('strictQuery', false);
+app.use(bodyParser.json());
+
 const port = process.env.PORT || 3000;
+//conection
+const uri="mongodb+srv://malak:malakwahyb12@cluster0.7zfe3os.mongodb.net/?retryWrites=true&w=majority"
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error: "));
+db.once("open", function () {
+    console.log("Connected successfully");
+});
+autoIncrement.initialize(mongoose.connection)
+//schema
+const schemaMovies = new mongoose.Schema({
+   
+    title: {
+        type: String,
+        required: true
+    },
+    year: {
+        type: Number,
+        default: 1900
+
+    },
+    rating: {
+        type: Number,
+        default: 4
+    }
+
+}, { versionKey: false });
+
+const movies = mongoose.model('movies', schemaMovies);
+schemaMovies.plugin(autoIncrement.plugin, "movies");
+
+
+
 var date= new Date()
 var hour=date.getHours()
 var min=date.getMinutes()
@@ -44,86 +83,97 @@ app.get("/search",(req,res)=>{
         res.send( {status:200, message:"ok", data:req.query.s})
     }
 })
-//create array
-const movies = [
-    { title: 'Jaws', year: 1975, rating: 8 },
-    { title: 'Avatar', year: 2009, rating: 7.8 },
-    { title: 'Brazil', year: 1985, rating: 8 },
-    { title: 'الإرهاب والكباب', year: 1992, rating: 6.2 }
-]
-// // add route
-// app.get("/movies/create",(req,res)=>{
-//     res.send({status:200, message:"create a movie"})
-// })
 
-//edit route
-app.get("/movies/update",(req,res)=>{
-    res.send({status:200, message:"update movies"})
-})
-// //delete route
-// app.get("/movies/delete",(req,res)=>{
-//     res.send({status:200, message:"delete movies"})
-// })
+
+
+app.get("/movies/read", async (req, res) => {
+    try {
+      const movie = await movies.find();
+      res.json(movie);
+    } catch (err) {
+      console.log(err);
+    }
+  });
 //get by date
-app.get("/movies/read/by-date",(req,res)=>{
-    res.send({status:200, data:movies.sort((a,b)=>
-        a.year - b.year)}
-        )}
-    )
+app.get("/movies/read/by-date",async(req,res)=>{
+ try {
+    const by_date = await movies.find();
+    by_date.sort((a, b) => b.year - a.year);
+    res.send(by_date);
+  } catch (err) {
+    console.log(err);
+  }
+} )
 // get by rating
-app.get("/movies/read/by-rating",(req,res)=>{
-    res.send({status:200, data:movies.sort((a,b)=>b.rating-a.rating)})
-})
-//get by title
-app.get("/movies/read/by-title", (req, res) => {
-    res.send(
-        {status:200,data:movies.sort((a,b)=>(a.title).localeCompare(b.title))})
-   
-});
-//get by id
-app.get(["/movies/read/id/","/movies/read/id/:ID"], (req, res) => {
-  
-    if(req.params.ID>0 && req.params.ID <=movies.length){
-       res.send({status:200,data:movies[req.params.ID-1]})
-       
-    }else{
-         res.status(404);
-        res.send({status:404, error:true, message:`the movie ${req.params.ID} does not exist you have to provide`})
-    }
-})
-// add movies
-app.post("/movies/add",(req,res)=>{
-    if(req.query.title && req.query.year && (/^[1-9]\d{3}$/).test(req.query.year)){
-        movies.push({title:req.query.title,year:req.query.year, rating:(req.query.rating && Number(req.query.rating)<=10&&Number(req.query.rating)>0)?Number(req.query.rating):4})
-        res.send({status:200, movies})
-    }else{
-        res.status(403)
-     res.send({status:403, error:true, message:"you cannot create a movie without providing a title and a year"})
-    }
-}
-)
-//delete
-app.delete("/movies/delete/:id",(req,res)=>{
-   if(req.params.id>0&& req.params.id<=movies.length){
-    movies.splice(req.params.id-1, 1)
-    res.send({status:200, movies})
- 
-   }else{
-    res.send({status:200,message:`the movie ${req.params.id} does not exist`})
+app.get("/movies/read/by-rating",async(req,res)=>{
+   try{
+    const by_rating=await movies.find();
+    by_rating.sort((a, b) => b.rating - a.rating);
+    res.send(by_rating);
+   }catch(err){
+    console.log(err);
    }
 })
-//update
-app.put("/movies/update/:id", (req, res) => {
-    let id = Number(req.params.id) 
-    if(id>=0 && id<movies.length){
-        if(req.query.title){
-            movies[id-1].title=req.query.title
-            res.send({status:200, data:movies})}
-        if(req.query.rating && Number(req.query.rating)>=0 && Number(req.query.rating)<10) {
-            movies[id-1].rating = Number(req.query.rating)
-            res.send({status:200, data:movies})}
-        if(req.query.year && (/^[1-9]\d{3}$/).test(req.query.year)){
-             movies[id].year = req.query.year
-            res.send({status:200, data:movies})}
-    }else {res.status(404).send({status:404, error:true, message:`the movie '${req.params.id}' does not exist`});}
+//get by title
+app.get("/movies/read/by-title",async (req, res) =>{ 
+    try{
+        const by_title=await movies.find();
+        by_title.sort((a,b)=>(a.title).localeCompare(b.title))
+        res.send(by_title);
+    }catch(err){
+        console.log(err);
+    }
 });
+//get by id
+app.get("/movies/read/:id",async (req, res) => {
+    try{
+        const FindBY=await movies.findById(req.params.id)
+         res.send(FindBY)
+       }catch(err){
+         console.log(err)
+       }
+})
+// add movies
+app.post("/movies/add",async(req,res)=>{
+  try{
+    movies.create({
+    _id:4,//every time change the id when you want to add a new movie.
+    title: req.body.title,
+    year: req.body.year,
+    rating: req.body.rating,
+})}catch(err){
+    console.log(err)
+}
+})
+
+//delete
+app.delete("/movies/delete/:id",(req,res)=>{
+    movies.findByIdAndDelete(req.params.id).then(deletedMovie => {
+        movies.find().then(movies => {
+            res.send({ status: 200, data: movies });
+        })
+    }).catch(err => {
+        res.status(404).send({ status: 404, error: true, message: `the movie '${req.params.id}' does not exist` });
+    })
+})
+//update
+app.put("/movies/update/:id", async (req, res) =>{
+   
+    try {
+        const movie = await movies.updateOne(
+          { _id: req.params.id },
+          { $set: { title: req.body.title ,year:req.body.year,rating:req.body.rating} }
+        );
+    
+        res.send(movie);
+      } catch (err) {
+        res.status(500).send(err);
+      }
+    });
+      
+    
+    
+// function getValueForNextSequence(sequenceOfName){
+
+//     return se + 1;
+// }

@@ -1,15 +1,18 @@
 const express = require('express');
 const app = express();
 const mongoose=require('mongoose')
-// const bodyParser = require('body-parser');
+const authRoute=require('./routes/auth')
 const autoIncrement = require('mongoose-auto-increment')
+const verify=require('./routes/verifyToken')
 mongoose.set('strictQuery', false);
 app.use(express.json())
-
-
-const port = process.env.PORT || 4000;
+const dotenv = require('dotenv');
+dotenv.config();
+const cookieParser=require("cookie-parser")
+app.use(cookieParser())
+const port = process.env.PORT || 5000;
 //conection
-const uri="mongodb+srv://malak:malakwahyb12@cluster0.7zfe3os.mongodb.net/?retryWrites=true&w=majority"
+const uri=process.env.DB_CONNECT
 mongoose
     .connect(uri, {
       useNewUrlParser: true,
@@ -60,78 +63,6 @@ async function getModelLength() {
   }
 app.listen(port, () =>{console.log(`listening on port ${port} clt c to get out`);});
 
-//user array
-const userSchema=mongoose.Schema({
-    userName:{
-        type:String,
-        required:true
-    },
-    password:{
-        type:String,
-        required:true
-    }
-})
-const user=mongoose.model('user',userSchema);
-//add
-app.post('/user/add',async(req,res)=>{
-const NewUser=new user({
-    userName:req.body.userName,
-    password:req.body.password
-});
-try{
-    const SaveUser=await NewUser.save();
-    res.send(new User)
-}catch(err){
-    res.send(err)
-}
-})
-//delete
-app.delete('user/delete/:id',async(req,res)=>{
-    try{
-        const deleteUser=await user.deleteOne({_id:req.params.id})
-        res.send(deleteUser)
-    }catch(err){
-        res.send(err)
-    }
-})
-//update
-app.put('user/update/:id',(req,res)=>{
-    const id = req.params.id;
-    const update = req.body;
-  
-    user.findByIdAndUpdate(id, update, function(error, doc) {
-      if (error) {
-        res.status(500).send(error);
-      } else {
-        res.send(doc);
-      }
-    });
-  
-})
-//read
-app.get('/user/read/:id',async(req,res)=>{
-    try{
-        const readUser=await user.findById(req.params.id)
-        res.send(readUser)
-    }catch(err){res.send(err)}})
-//check function
-// function check(usernames,password){
-//     let acceptPassword=false
-//     let acceptName=false
-//     for(let i=0;i<user.length;i++){
-//     if(usernames==user[i].userName){
-//         if(password==user[i].password){
-//             acceptName=true
-//             acceptPassword=true
-//         }
-
-//     }
-//     return 1;
-// }
-// }
-
-
-
 
 app.get("/movies/read", async (req, res) => {
     try {
@@ -181,7 +112,9 @@ app.get("/movies/read/:id",async (req, res) => {
        }
 })
 // add movies
-app.post("/movies/add",async(req,res)=>{
+app.post("/movies/add",verify,async(req,res)=>{
+   
+       
     id= await getModelLength();
   try{
     movies.create({
@@ -196,7 +129,8 @@ app.post("/movies/add",async(req,res)=>{
 })
 
 //delete
-app.delete("/movies/delete/:id",(req,res)=>{
+app.delete("/movies/delete/:id",verify,(req,res)=>{
+  console.log("del")
     
     movies.findByIdAndDelete(req.params.id).then(deletedMovie => {
         movies.find().then(movies => {
@@ -207,7 +141,7 @@ app.delete("/movies/delete/:id",(req,res)=>{
     })
 })
 //update
-app.put("/movies/update/:id", async (req, res) =>{
+app.put("/movies/update/:id", verify,async (req, res) =>{
     title = req.body.title
     year = req.body.year
     rating = req.body.rating
@@ -245,11 +179,11 @@ app.put("/movies/update/:id", async (req, res) =>{
             } catch (err) {
               res.status(500).json(err);
             }}
-            
-      
-      
+
     });
-      
+    //user route middleware
+    app.use('/user',authRoute)
+    
     
     
 

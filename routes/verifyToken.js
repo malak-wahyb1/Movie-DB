@@ -1,13 +1,10 @@
 const jwt=require('jsonwebtoken')
 module.exports=function (req, res, next) {
-const token=req.header['auth-token']
+const token=req.cookies['auth']
 if(!token) return res.status(401).send('access denied')
 
 try {
-    const admin={
-        user:"malak",
-        password:"1234567"
-    }
+    const admin="malak"
     const verified=jwt.verify(token,admin)
     req.user=verified
     next()

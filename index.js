@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const cookieParser=require("cookie-parser")
 app.use(cookieParser())
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 //conection
 const uri=process.env.DB_CONNECT
 mongoose
@@ -58,9 +58,10 @@ const schemaMovies = new mongoose.Schema({
 
 const movies = mongoose.model('movies', schemaMovies);
 schemaMovies.plugin(autoIncrement.plugin, "movies");
+ 
 async function getModelLength() {
-    return await movies.countDocuments();
-  }
+  return await movies.countDocuments();
+}
 app.listen(port, () =>{console.log(`listening on port ${port} clt c to get out`);});
 
 
@@ -112,13 +113,12 @@ app.get("/movies/read/:id",async (req, res) => {
        }
 })
 // add movies
-app.post("/movies/add",verify,async(req,res)=>{
+app.post("/movies/add",async(req,res)=>{
    
-       
-    id= await getModelLength();
+  id= await getModelLength();
   try{
     movies.create({
-    _id:id+1,
+    _id:id+2,
     title: req.body.title,
     year: req.body.year,
     rating: req.body.rating,
@@ -130,8 +130,7 @@ app.post("/movies/add",verify,async(req,res)=>{
 
 //delete
 app.delete("/movies/delete/:id",verify,(req,res)=>{
-  console.log("del")
-    
+
     movies.findByIdAndDelete(req.params.id).then(deletedMovie => {
         movies.find().then(movies => {
             res.send({ status: 200, data: movies });
@@ -144,7 +143,7 @@ app.delete("/movies/delete/:id",verify,(req,res)=>{
 app.put("/movies/update/:id", verify,async (req, res) =>{
     title = req.body.title
     year = req.body.year
-    rating = req.body.rating
+    rating = req.body.rating 
     if(title && !rating) {
         try {
           const movie = await movies.updateOne(

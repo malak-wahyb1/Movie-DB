@@ -40,17 +40,11 @@ router.post('/register', async (req, res) => {
         res.status(400).send(err)
     }
 })
-// log in
-
-     const Schema=Joi.object({
-      name: Joi.string().required().min(6),
-      password: Joi.string().min(6).required(),
-  }); 
   //login rout
   router.post('/login', async (req, res) => {
     //let validate schema
-       const  {error} = Schema.validate(req.body);
-       if(error)return res.status(400).send(error.details[0].message)
+    //    const  {error} = Schema.validate(req.body);
+    //    if(error)return res.status(400).send(error.details[0].message)
        //check if user exist
        const user=await User.findOne({name:req.body.name})
        if(!user) return res.status(400).send('user nam is not exist')
@@ -59,15 +53,40 @@ router.post('/register', async (req, res) => {
         if(!validPass)return res.status(400).send('password is incorrect')
 
         // create and assign a token
-        const admin={
-            user:"malak",
-            password:"1234567"
-        }
+        const admin="malak"
         const token=jwt.sign({_id:user._id},admin)
-        res.header('auth-token',token).send(token)
+        res.cookie('auth',token).send("allow")
       
   })
- 
-
-
+  //delete user
+  router.delete("/delete/:id",valid, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const users = await User.deleteOne({ _id: id });
+    res.json(users);}
+  catch (err) {
+    res.status(500).json(err);
+  }
+})
+//update
+const Schema=Joi.object({
+    name: Joi.string().required().min(6),
+    password: Joi.string().min(6).required(),
+}); 
+router.put('/update/:id',valid, async (req, res) => {
+    const  {error} = schema.validate(req.body);
+    if(error)return res.status(400).send(error.details[0].message)
+  
+try {
+    const users = await User.updateOne(
+      { _id: id },
+      { $set: { password: password } }
+    );
+    res.send("done");
+  } catch (err) {
+    res.status(500).json(err);
+  }
+  })
+  //get user
+  
 module.exports =router;
